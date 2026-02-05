@@ -87,28 +87,28 @@ async function scrapeGitHubContributions(username) {
             const data = daysData.toSorted((a, b) => b.date - a.date)
             // return data
             let currentStreak = 0;
-            let longestStreak = 0;
-            let tempStreak = 0;
+            // let longestStreak = 0;
+            // let tempStreak = 0;
 
             // Count from most recent day backwards
             // const daysArray = Array.from(days).reverse();
-            let foundNonZero = false;
+            let foundZero = false;
             let i = 0
             for (const day of data) {
-                if (i == 0 & day.level > 1) {
+                if (i == 0 && day.level > 1) {
                     currentStreak = 1
                 } else {
+                    if (day.level == 0) {
+                        foundZero = true;
+                    }
 
+                    if (!foundZero) {
+                        currentStreak++;
+                    }
                 }
-                if (day.level > 0) {
-                    foundNonZero = true;
-                    tempStreak++;
-                    if (!currentStreak) currentStreak = tempStreak;
-                } else if (foundNonZero) {
-                    longestStreak = Math.max(longestStreak, tempStreak);
-                    tempStreak = 0;
-                }
+                i++;
             }
+            return currentStreak
             longestStreak = Math.max(longestStreak, tempStreak);
 
             // Get contribution levels (0-4 scale for color intensity)
