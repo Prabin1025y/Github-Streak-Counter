@@ -32,10 +32,10 @@ async function getBrowser() {
 
 async function scrapeGitHubContributions(username) {
     // Check cache first
-    if (cache.data && Date.now() - cache.timestamp < cache.ttl) {
-        console.log('Serving from cache');
-        return cache.data;
-    }
+    // if (cache.data && Date.now() - cache.timestamp < cache.ttl) {
+    //     console.log('Serving from cache');
+    //     return cache.data;
+    // }
 
     console.log('Fetching fresh data from GitHub');
 
@@ -87,28 +87,23 @@ async function scrapeGitHubContributions(username) {
             const data = daysData.toSorted((a, b) => b.date - a.date)
             // return data
             let currentStreak = 0;
-            // let longestStreak = 0;
-            // let tempStreak = 0;
+            if (data[0].level === 0 && data[1]?.level === 0) {
+                currentStreak = 0;
+            } else {
+                for (let i = 0; i < data.length; i++) {
+                    const day = data[i];
 
-            // Count from most recent day backwards
-            // const daysArray = Array.from(days).reverse();
-            let foundZero = false;
-            let i = 0
-            for (const day of data) {
-                if (i == 0 && day.level > 1) {
-                    currentStreak = 1
-                } else {
-                    if (day.level == 0) {
-                        foundZero = true;
+                    // Stop when we hit first zero (except today)
+                    if (day.level === 0) {
+                        if (i === 0) continue; // today is allowed to be zero
+                        break;
                     }
 
-                    if (!foundZero) {
-                        currentStreak++;
-                    }
+                    currentStreak++;
                 }
-                i++;
             }
-            return currentStreak
+
+            return currentStreak;
             longestStreak = Math.max(longestStreak, tempStreak);
 
             // Get contribution levels (0-4 scale for color intensity)
@@ -159,109 +154,230 @@ async function scrapeGitHubContributions(username) {
 }
 
 // SVG badge endpoint
-app.get('/badge.svg', async (req, res) => {
-    const username = req.query.username || process.env.GITHUB_USERNAME || 'torvalds';
-    const label = req.query.label || 'Contributions';
+// app.get('/badge.svg', async (req, res) => {
+//     const username = req.query.username || process.env.GITHUB_USERNAME || 'torvalds';
+//     const label = req.query.label || 'Contributions';
 
-    const data = await scrapeGitHubContributions(username);
+//     const data = await scrapeGitHubContributions(username);
 
-    const value = data.error ? 'Error' : (data.totalContributions || 'N/A');
-    const color = data.error ? 'red' :
-        data.totalContributions > 1000 ? 'brightgreen' :
-            data.totalContributions > 500 ? 'green' :
-                data.totalContributions > 100 ? 'yellow' : 'orange';
+//     const value = data.error ? 'Error' : (data.totalContributions || 'N/A');
+//     const color = data.error ? 'red' :
+//         data.totalContributions > 1000 ? 'brightgreen' :
+//             data.totalContributions > 500 ? 'green' :
+//                 data.totalContributions > 100 ? 'yellow' : 'orange';
 
-    const labelWidth = label.length * 7 + 10;
-    const valueWidth = String(value).length * 7 + 10;
-    const totalWidth = labelWidth + valueWidth;
+//     const labelWidth = label.length * 7 + 10;
+//     const valueWidth = String(value).length * 7 + 10;
+//     const totalWidth = labelWidth + valueWidth;
 
-    const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="${totalWidth}" height="20">
-      <linearGradient id="b" x2="0" y2="100%">
-        <stop offset="0" stop-color="#bbb" stop-opacity=".1"/>
-        <stop offset="1" stop-opacity=".1"/>
-      </linearGradient>
-      <mask id="a">
-        <rect width="${totalWidth}" height="20" rx="3" fill="#fff"/>
-      </mask>
-      <g mask="url(#a)">
-        <path fill="#555" d="M0 0h${labelWidth}v20H0z"/>
-        <path fill="#${color}" d="M${labelWidth} 0h${valueWidth}v20H${labelWidth}z"/>
-        <path fill="url(#b)" d="M0 0h${totalWidth}v20H0z"/>
-      </g>
-      <g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11">
-        <text x="${labelWidth / 2}" y="15" fill="#010101" fill-opacity=".3">${label}</text>
-        <text x="${labelWidth / 2}" y="14">${label}</text>
-        <text x="${labelWidth + valueWidth / 2}" y="15" fill="#010101" fill-opacity=".3">${value}</text>
-        <text x="${labelWidth + valueWidth / 2}" y="14">${value}</text>
-      </g>
-    </svg>
-  `;
+//     const svg = `
 
-    res.setHeader('Content-Type', 'image/svg+xml');
-    res.setHeader('Cache-Control', 'max-age=300'); // 5 minutes
-    res.send(svg.trim());
-});
+//     `;
+
+//     res.setHeader('Content-Type', 'image/svg+xml');
+//     res.setHeader('Cache-Control', 'max-age=300'); // 5 minutes
+//     res.send(svg.trim());
+// });
 
 // Multiple stats badges
-app.get('/badge/:stat.svg', async (req, res) => {
+app.get('/badge.svg', async (req, res) => {
     const username = req.query.username || process.env.GITHUB_USERNAME || 'torvalds';
-    const stat = req.params.stat;
+    // const stat = req.params.stat;
 
-    const data = await scrapeGitHubContributions(username);
+    const currentStreak = await scrapeGitHubContributions(username);
+    console.log("Current Streak: ", currentStreak)
 
-    let label, value, color;
+    const width = 400
+    const height = 550
 
-    switch (stat) {
-        case 'streak':
-            label = 'Current Streak';
-            value = data.error ? 'Error' : `${data.currentStreak} days`;
-            color = data.error ? 'red' : data.currentStreak > 30 ? 'brightgreen' : 'green';
-            break;
-        case 'weekly':
-            label = 'This Week';
-            value = data.error ? 'Error' : data.thisWeek;
-            color = data.error ? 'red' : data.thisWeek > 20 ? 'brightgreen' : 'green';
-            break;
-        case 'longest':
-            label = 'Longest Streak';
-            value = data.error ? 'Error' : `${data.longestStreak} days`;
-            color = data.error ? 'red' : 'blue';
-            break;
-        default:
-            label = 'Contributions';
-            value = data.error ? 'Error' : data.totalContributions;
-            color = data.error ? 'red' : 'brightgreen';
-    }
+    let svg = `<?xml version="1.0" encoding="UTF-8"?>
+        <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="${width}"
+        height="${height}"
+        viewBox="0 0 ${width} ${height}"
+        >
+            <defs>
+                <linearGradient id="fireGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stop-color="#FFD700" stop-opacity="1" />
+                <stop offset="50%" stop-color="#FF6B35" stop-opacity="1" />
+                <stop offset="100%" stop-color="#D92E1D" stop-opacity="1" />
+                </linearGradient>
 
-    const labelWidth = label.length * 6.5 + 10;
-    const valueWidth = String(value).length * 7 + 10;
-    const totalWidth = labelWidth + valueWidth;
+                <linearGradient id="flameGradient" x1="0%" y1="100%" x2="0%" y2="0%">
+                <stop offset="0%" stop-color="#FF6B35" stop-opacity="1" />
+                <stop offset="60%" stop-color="#FFA500" stop-opacity="1" />
+                <stop offset="100%" stop-color="#FFD700" stop-opacity="0.8" />
+                </linearGradient>
 
-    const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="${totalWidth}" height="20">
-      <linearGradient id="b" x2="0" y2="100%">
-        <stop offset="0" stop-color="#bbb" stop-opacity=".1"/>
-        <stop offset="1" stop-opacity=".1"/>
-      </linearGradient>
-      <mask id="a">
-        <rect width="${totalWidth}" height="20" rx="3" fill="#fff"/>
-      </mask>
-      <g mask="url(#a)">
-        <path fill="#555" d="M0 0h${labelWidth}v20H0z"/>
-        <path fill="#${color}" d="M${labelWidth} 0h${valueWidth}v20H${labelWidth}z"/>
-        <path fill="url(#b)" d="M0 0h${totalWidth}v20H0z"/>
-      </g>
-      <g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11">
-        <text x="${labelWidth / 2}" y="15" fill="#010101" fill-opacity=".3">${label}</text>
-        <text x="${labelWidth / 2}" y="14">${label}</text>
-        <text x="${labelWidth + valueWidth / 2}" y="15" fill="#010101" fill-opacity=".3">${value}</text>
-        <text x="${labelWidth + valueWidth / 2}" y="14">${value}</text>
-      </g>
-    </svg>
-  `;
+                <radialGradient id="fireGlow" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#FF6B35" stop-opacity="0.6" />
+                <stop offset="100%" stop-color="#FF6B35" stop-opacity="0" />
+                </radialGradient>
 
-    res.setHeader('Content-Type', 'image/svg+xml');
+                <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#1A1A2E" stop-opacity="1" />
+                <stop offset="100%" stop-color="#16213E" stop-opacity="1" />
+                </linearGradient>
+
+                <filter id="textGlow">
+                    <feGaussianBlur std-deviation="2" result="coloredBlur" />
+                    <feMerge>
+                        <feMergeNode in="coloredBlur" />
+                        <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                </filter>
+
+                <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feDropShadow dx="0" dy="4" std-deviation="3" flood-opacity="0.3" />
+                </filter>
+            </defs>
+            <rect
+                width="${width}"
+                height="${height}"
+                fill="url(#bgGradient)"
+                rx="24"
+            />
+
+            <rect
+                width="${width}"
+                height="${height}"
+                fill="none"
+                stroke="#FF6B35"
+                stroke-width="2"
+                rx="24"
+                opacity="0.3"
+            />
+    `;
+
+    const xMainFire = width / 2
+    const yMainFire = 80
+    const sizeMainFire = 60
+
+    svg = svg.concat(`
+            <g>
+                <circle
+                cx="${xMainFire}"
+                cy="${yMainFire}"
+                r="${sizeMainFire * 0.7}"
+                fill="url(#fireGlow)"
+                opacity="0.3"
+                />
+
+                <circle cx="${xMainFire}" cy="${yMainFire}" r="${sizeMainFire / 2}" fill="#FF6B35" />
+
+                <ellipse
+                cx="${xMainFire}"
+                cy="${yMainFire - sizeMainFire / 3}"
+                rx="${sizeMainFire / 3}"
+                ry="${sizeMainFire / 1.5}"
+                fill="url(#fireGradient)"
+                />
+
+                <path
+                d="M ${xMainFire - sizeMainFire / 3} ${yMainFire + sizeMainFire / 2} Q ${xMainFire} ${yMainFire - sizeMainFire} ${xMainFire + sizeMainFire / 3} ${yMainFire + sizeMainFire / 2}"
+                fill="url(#flameGradient)"
+                />
+
+                <ellipse
+                cx="${xMainFire}"
+                cy="${yMainFire - sizeMainFire / 1.8}"
+                rx="${sizeMainFire / 4}"
+                ry="${sizeMainFire / 2.5}"
+                fill="#FFD700"
+                opacity="0.9"
+                />
+            </g>
+
+            <text
+                x="${width / 2}"
+                y="${200}"
+                font-size="72"
+                font-weight="700"
+                font-family="Arial, sans-serif"
+                text-anchor="middle"
+                fill="url(#fireGradient)"
+                filter="url(#textGlow)"
+                letter-spacing="-2"
+            >
+                ${currentStreak}
+            </text>
+            <text
+                x="${width / 2}"
+                y="${235}"
+                font-size="28"
+                font-weight="500"
+                font-family="Arial, sans-serif"
+                text-anchor="middle"
+                fill="#FF9966"
+                opacity="0.9"
+                letter-spacing="1"
+            >
+                days streak
+            </text>
+        `)
+
+    Array.from({ length: 7 }).forEach((_, idx) => {
+        const fireX = width / 2 - ((7 - 1) * (35 + 20)) / 2 + idx * (35 + 20);
+        const fireY = 340;
+
+        const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const dayLabel = dayLabels[idx];
+        svg = svg.concat(`
+            <g>
+              <text
+                x="${fireX}"
+                y="${fireY - 50}"
+                font-size="12"
+                font-weight="500"
+                font-family="Arial, sans-serif"
+                text-anchor="middle"
+                fill="#CCCCCC"
+                opacity="0.8"
+              >
+                ${dayLabel}
+              </text>
+                <g>
+                    <circle
+                    cx="${fireX}"
+                    cy="${fireY}"
+                    r="${35 * 0.7}"
+                    fill="url(#fireGlow)"
+                    opacity="0.3"
+                    />
+
+                    <circle cx="${fireX}" cy="${fireY}" r="${35 / 2}" fill="#FF6B35" />
+
+                    <ellipse
+                    cx="${fireX}"
+                    cy="${fireY - 35 / 3}"
+                    rx="${35 / 3}"
+                    ry="${35 / 1.5}"
+                    fill="url(#fireGradient)"
+                    />
+
+                    <path
+                    d="M ${fireX - 35 / 3} ${fireY + 35 / 2} Q ${fireX} ${fireY - 35} ${fireX + 35 / 3} ${fireY + 35 / 2}"
+                    fill="url(#flameGradient)"
+                    />
+
+                    <ellipse
+                    cx="${fireX}"
+                    cy="${fireY - 35 / 1.8}"
+                    rx="${35 / 4}"
+                    ry="${35 / 2.5}"
+                    fill="#FFD700"
+                    opacity="0.9"
+                    />
+                </g>
+            </g>
+        `)
+    })
+    svg += `</svg>`
+
+
+
+    res.setHeader('Content-Type', 'image/svg+xml; charset=utf-8');
     res.setHeader('Cache-Control', 'max-age=300');
     res.send(svg.trim());
 });
