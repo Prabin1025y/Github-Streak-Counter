@@ -153,32 +153,6 @@ async function scrapeGitHubContributions(username) {
     }
 }
 
-// SVG badge endpoint
-// app.get('/badge.svg', async (req, res) => {
-//     const username = req.query.username || process.env.GITHUB_USERNAME || 'torvalds';
-//     const label = req.query.label || 'Contributions';
-
-//     const data = await scrapeGitHubContributions(username);
-
-//     const value = data.error ? 'Error' : (data.totalContributions || 'N/A');
-//     const color = data.error ? 'red' :
-//         data.totalContributions > 1000 ? 'brightgreen' :
-//             data.totalContributions > 500 ? 'green' :
-//                 data.totalContributions > 100 ? 'yellow' : 'orange';
-
-//     const labelWidth = label.length * 7 + 10;
-//     const valueWidth = String(value).length * 7 + 10;
-//     const totalWidth = labelWidth + valueWidth;
-
-//     const svg = `
-
-//     `;
-
-//     res.setHeader('Content-Type', 'image/svg+xml');
-//     res.setHeader('Cache-Control', 'max-age=300'); // 5 minutes
-//     res.send(svg.trim());
-// });
-
 // Multiple stats badges
 app.get('/badge.svg', async (req, res) => {
     const username = req.query.username || process.env.GITHUB_USERNAME || 'torvalds';
