@@ -9,6 +9,11 @@ const app = express();
 app.use(express.static('public')); // Serve static files from the "public" directory
 const PORT = process.env.PORT || 3000;
 
+app.get("/", (req, res) => 
+    res.send(`
+    <h1>GitHub Contribution Scraper</h1>
+`));
+
 app.get("/health", (req, res) => {
     res.status(200).send("OK");
 });
