@@ -6,6 +6,7 @@ const router = Router();
 
 router.get('/',async (req, res) => {
     const username = req.query.username;
+    const color = req.query.color || 'orange';
 
     if(!username) {
         return res.status(400).send('Missing "username" query parameter.');
@@ -18,7 +19,8 @@ router.get('/',async (req, res) => {
         currentStreak: data.currentStreak,
         daysThisYear: data.totalDaysContributedLastYear,
         weeklyData: data.weeklyData,
-        todaysIndex: data.todaysIndex
+        todaysIndex: data.todaysIndex,
+        color: color
     })
 
     res.setHeader('Content-Type', 'image/svg+xml; charset=utf-8');
