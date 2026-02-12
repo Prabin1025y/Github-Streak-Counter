@@ -134,13 +134,16 @@ export async function scrapeGitHubContributions(username) {
                 return ({
                     contributions: Number(contributions),
                     level: Number(element.getAttribute("data-level")),
-                    date: Math.floor(new Date(element.getAttribute("data-date")).getTime() / (1000 * 60 * 60))
+                    date: Math.floor(new Date(element.getAttribute("data-date")).getTime())
                 });
             });
 
             const data = daysData.toSorted((a, b) => b.date - a.date);
             const totalDaysContributedLastYear = data.filter(day => day.contributions > 0).length;
             const todaysIndex = weeklyData.length;
+            let startDate;
+            let endDate = Date.now();
+
 
             let currentStreak = 0;
             if (data[0].level === 0 && data[1]?.level === 0) {
@@ -149,9 +152,13 @@ export async function scrapeGitHubContributions(username) {
                 for (let i = 0; i < data.length; i++) {
                     const day = data[i];
                     if (day.level === 0) {
-                        if (i === 0) continue;
+                        if (i === 0) {
+                            endDate = Date.now() - (24 * 60 * 60 * 1000); // today is zero, so end date is yesterday
+                            continue;
+                        }
                         break;
                     }
+                    startDate = day.date;
                     currentStreak++;
                 }
             }
@@ -162,7 +169,15 @@ export async function scrapeGitHubContributions(username) {
                 }
             }
 
-            return { currentStreak, totalContributionsLastYear: totalContributions, totalDaysContributedLastYear, weeklyData, todaysIndex };
+            return {
+                currentStreak,
+                totalContributionsLastYear: totalContributions,
+                totalDaysContributedLastYear,
+                weeklyData,
+                todaysIndex,
+                startDate,
+                endDate
+            };
         });
 
         // Update per-username cache
@@ -176,7 +191,7 @@ export async function scrapeGitHubContributions(username) {
 
         // Try to recover broken page
         if (page) {
-            try { await page.close(); } catch {}
+            try { await page.close(); } catch { }
             page = null; // don't return to pool
         }
 

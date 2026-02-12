@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { scrapeGitHubContributions } from "../utils/scrapeGithub.js";
 import { generateStatsDashboardSVG } from "../utils/svg.js";
+import { getFormattedStartAndEndDates } from "../utils/getDateString.js";
 
 const router = Router();
 
@@ -13,6 +14,7 @@ router.get('/',async (req, res) => {
     }
     
     const data = await scrapeGitHubContributions(username);
+    const formattedDateString = getFormattedStartAndEndDates(data.startDate, data.endDate);
 
     const svg = generateStatsDashboardSVG({
         contributionsThisYear: data.totalContributionsLastYear,
@@ -20,7 +22,8 @@ router.get('/',async (req, res) => {
         daysThisYear: data.totalDaysContributedLastYear,
         weeklyData: data.weeklyData,
         todaysIndex: data.todaysIndex,
-        color: color
+        color: color,
+        dateRange: formattedDateString
     })
 
     res.setHeader('Content-Type', 'image/svg+xml; charset=utf-8');
