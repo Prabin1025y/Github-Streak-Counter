@@ -5,10 +5,31 @@
 ## Preview
 
 <p align="center">
-  <img src="./public/example.svg" width="500" />
+  <img src="./public/orange.svg" width="500" />
 </p>
 
+---
 
+## Themes
+
+Pick a color theme using the `color` query parameter. Preview of all available themes:
+
+| Theme | Preview |
+|---|---|
+| `color=cyan` | <img src="./public/cyan.svg" width="300" /> |
+| `color=blue` | <img src="./public/blue.svg" width="300" /> |
+| `color=ice` | <img src="./public/ice.svg" width="300" /> |
+| `color=green` | <img src="./public/green.svg" width="300" /> |
+| `color=toxic` | <img src="./public/toxic.svg" width="300" /> |
+| `color=pink` | <img src="./public/pink.svg" width="300" /> |
+| `color=magenta` | <img src="./public/magenta.svg" width="300" /> |
+| `color=purple` | <img src="./public/purple.svg" width="300" /> |
+| `color=orange` | <img src="./public/orange.svg" width="300" /> |
+| `color=gold` | <img src="./public/gold.svg" width="300" /> |
+| `color=red` | <img src="./public/red.svg" width="300" /> |
+| `color=white` | <img src="./public/white.svg" width="300" /> |
+
+---
 
 ## Usage
 
@@ -19,11 +40,20 @@ Simply paste this into your GitHub `README.md`:
 ```md
 ![GitHub Streak](https://github-streak-counter.up.railway.app/badge.svg?username={your-username})
 ```
-Replace `{your-username}` with your GitHub username.
-**Example:**
+
+To use a specific color theme, add the `color` param:
+
+```md
+![GitHub Streak](https://github-streak-counter.up.railway.app/badge.svg?username={your-username}&color={theme-name})
+```
+
+Replace `{your-username}` with your GitHub username and `{theme-name}` with one of the theme names from the table above. If `color` is omitted, the default theme is used.
+
+**Examples:**
 
 ```md
 ![GitHub Streak](https://github-streak-counter.up.railway.app/badge.svg?username=Prabin1025y)
+![GitHub Streak](https://github-streak-counter.up.railway.app/badge.svg?username=Prabin1025y&color=theme1)
 ```
 
 ### Self-host
@@ -61,6 +91,7 @@ The server will start on `http://localhost:3000`.
 
 ```md
 ![GitHub Streak](http://localhost:3000/badge.svg?username={username})
+![GitHub Streak](http://localhost:3000/badge.svg?username={username}&color={theme-name})
 ```
 
 ---
@@ -92,6 +123,7 @@ The generated card is a `668×420` SVG containing:
 | Right | Active days this year |
 | Bottom bar | This week's daily contributions with streak highlighted |
 
+---
 
 ## Limitations
 
