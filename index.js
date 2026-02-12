@@ -1,7 +1,7 @@
 import express from 'express'
 import { shutdown } from './utils/shutDown.js';
 import router from './router/badge.router.js';
-import https from 'https';
+// import https from 'https';
 // import http from 'http';
 import "dotenv/config";
 
@@ -29,21 +29,21 @@ app.listen(PORT, () => {
     console.log(`📊 Badge: http://localhost:${PORT}/badge.svg?username=yourname`);
 });
 
-const INTERVAL_DELAY = 8 * 60 * 1000; // 8mins
-const url = new URL(`${process.env.API_URL}/health`);
+// const INTERVAL_DELAY = 8 * 60 * 1000; // 8mins
+// const url = new URL(`${process.env.API_URL}/health`);
 
-// don't sleep
-setInterval(() => {
-    https
-        .get(url.href)
-        .on("response", () => {
-            console.log(`api HEALTH_CHECK successful; ${url.href}`);
-        })
-        .on("error", (err) =>{
-            console.warn(
-                `api HEALTH_CHECK failed; ${err.message.trim()}`
-            )
-            // console.log(err)
-        }
-        );
-}, INTERVAL_DELAY);
+// // don't sleep
+// setInterval(() => {
+//     https
+//         .get(url.href)
+//         .on("response", () => {
+//             console.log(`api HEALTH_CHECK successful; ${url.href}`);
+//         })
+//         .on("error", (err) =>{
+//             console.warn(
+//                 `api HEALTH_CHECK failed; ${err.message.trim()}`
+//             )
+//             // console.log(err)
+//         }
+//         );
+// }, INTERVAL_DELAY);
